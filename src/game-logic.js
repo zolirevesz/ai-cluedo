@@ -168,6 +168,9 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
 }
 
+// Keep the inline handlers in index.html compatible with browsers that do not
+// expose top-level script functions as window properties.
+window.showScreen = showScreen;
 
 // ─── START GAME ───
 function startGame() {
