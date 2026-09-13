@@ -416,6 +416,9 @@ function useHint() {
 function usePrompt(prompt) {
   if (questionsRemaining <= 0 || usedPromptIds.has(prompt.id) || timerExpired) return;
 
+  if (typeof window.collapsePromptsPanel === 'function') {
+    window.collapsePromptsPanel();
+  }
 
   usedPromptIds.add(prompt.id);
   usedPromptsThisRound.push(prompt);
@@ -642,3 +645,15 @@ function lockAccusation() {
   showScreen('locked-screen');
   saveState();
 }
+
+// The markup uses inline handlers, so publish the module functions they call.
+Object.assign(window, {
+  clearState,
+  startGame,
+  enterRound,
+  useHint,
+  showRoundSummary,
+  proceedFromSummary,
+  lockAccusation,
+  usePrompt
+});
