@@ -4,6 +4,7 @@
 // Applied automatically after data loads
 // ═══════════════════════════════════════
 
+import { ROUND1_PROMPTS, ROUND2_PROMPTS, ROUND3_PROMPTS } from './game-data.js';
 
 var EXPLANATIONS = {
   // ── ROUND 1: ISTVÁN ──

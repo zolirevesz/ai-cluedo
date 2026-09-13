@@ -2,6 +2,7 @@
 // GAME LOGIC
 // ═══════════════════════════════════════
 
+import { CHARACTERS, ROUND1_PROMPTS, ROUND2_PROMPTS, ROUND3_PROMPTS, ROUND_INFO } from './game-data.js';
 
 let currentRound = 0;
 let questionsRemaining = 0;
