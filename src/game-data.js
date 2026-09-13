@@ -23,7 +23,7 @@ const ROUND_LIMITS = [
 // ─────────────────────────────────────────────────────────────
 
 
-const CHARACTERS = {
+export const CHARACTERS = {
   istvan: { name: 'István', role: 'Komornyik', emoji: '🎩' },
   katalin: { name: 'Katalin', role: 'Legidősebb lány', emoji: '👩‍💼' },
   anna: { name: 'Anna', role: 'Legfiatalabb lány', emoji: '🎭' },
@@ -32,7 +32,7 @@ const CHARACTERS = {
 };
 
 
-const ROUND_INFO = [
+export const ROUND_INFO = [
   {
     title: '1. Kör – Ismerkedés',
     description: 'Ismerjétek meg a szereplőket! Kérdezzétek ki őket a hátterükről, a kapcsolataikról és a személyiségükről. Próbáljátok kideríteni, kinek milyen viszonya volt az áldozattal.',
@@ -64,7 +64,7 @@ const ROUND_INFO = [
 // ROUND 1: GET TO KNOW CHARACTERS
 // 40 prompts (8 per character)
 // ─────────────────────────────────────
-const ROUND1_PROMPTS = [
+export const ROUND1_PROMPTS = [
   // ── ISTVÁN (Butler) ──
   { target: 'istvan', quality: 'weak', text: 'Mesélj magadról, István!',
     response: 'Hát, mit mondjak… István vagyok, a komornyik. Már több mint húsz éve dolgozom itt a kastélyban. Szeretem a munkámat, Nóra asszony mindig jó volt hozzám. Szörnyű, ami történt.' },
@@ -274,7 +274,7 @@ const ROUND1_PROMPTS = [
 // ROUND 2: TIMELINE OF THE NIGHT
 // 20 prompts (4 per character)
 // ─────────────────────────────────────
-const ROUND2_PROMPTS = [
+export const ROUND2_PROMPTS = [
   // ── ISTVÁN ──
   { target: 'istvan', quality: 'strong', text: 'István, pontosan hol voltál este 10:15 és 11:30 között? Részletezd percről percre!',
     response: '10:15-kor teát készítettem a konyhában Nóra asszonynak. 10:25-kor felvittem a dolgozószobába – ő nyugodtan olvasott az íróasztalánál. 10:40-kor elhagytam a szobát és bezártam a folyosó ajtaját, ahogy minden este szoktam. 10:45-től 11:05-ig elmostam az edényeket a konyhában. 11:05-től 11:30-ig kitakarítottam az ebédlőt. A mosogatóban még meleg volt a víz, a lámpák égtek. Ezután nem mentem vissza a dolgozószobába.' },
@@ -386,7 +386,7 @@ const ROUND2_PROMPTS = [
 // ROUND 3: INSPECTOR HELPER
 // 10 prompts
 // ─────────────────────────────────────
-const ROUND3_PROMPTS = [
+export const ROUND3_PROMPTS = [
   { target: 'nyomozo', quality: 'strong', text: 'Nyomozó, össze tudná hasonlítani Tamás és Anna alibiját este 11 óra körül? Vannak-e ellentmondások?',
     response: 'Igen, van egy fontos időrés. Tamás azt állítja, hogy 11:10-kor a szobájába ment. Anna szerint Tamás 11 óra körül hagyta el a szobáját. De a komornyik 11:10-kor látott valakit a dolgozószoba felől jönni – erős parfümillattal és kabátigazgatással. Ha Tamás Anna szobájából ment a sajátjába, miért volt a dolgozószoba közelében? Az útvonal nem egyezik.' },
 
