@@ -27,6 +27,7 @@
   .game-header h2{color:var(--gold);font-size:1.2rem}
   .round-info{display:flex;align-items:center;gap:1rem}
   .round-badge{background:var(--gold);color:var(--bg-dark);padding:.3rem .8rem;border-radius:6px;font-weight:600;font-size:.85rem}
+  .round-timer .round-badge{display:none}
   .question-counter{color:var(--text);font-size:.9rem}.question-counter span{color:var(--gold);font-weight:600;font-size:1.1rem}
   .game-body{display:flex;flex:1;overflow:hidden}
   .characters-panel{width:220px;background:var(--bg-card);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:.8rem;display:flex;flex-direction:column}
@@ -109,6 +110,8 @@
   .hint-btn-wrap:hover .hint-tooltip{visibility:visible;opacity:1}
   .prompt-card.highlighted{border-color:#4aba7a;background:rgba(74,186,122,.18);box-shadow:0 0 18px rgba(74,186,122,.3)}
   .prompt-card.highlighted .prompt-target::after{content:' ✨';font-size:.7rem}
+  .prompt-card.newly-unlocked{border-color:var(--gold);background:rgba(201,168,76,.15);box-shadow:0 0 15px rgba(201,168,76,.25);animation:fadeIn .5s ease}
+  .prompt-card.newly-unlocked .prompt-target::after{content:' 🆕';font-size:.7rem}
   .prompt-card.hint-animate{transition:transform .6s cubic-bezier(.4,0,.2,1),opacity .6s ease;z-index:5;position:relative}
   .prompt-card.hint-settle{animation:hintPop .4s ease forwards}.prompt-card.hint-settle .prompt-target::after{content:' ✨'}
   @keyframes hintPop{0%{box-shadow:0 0 0 rgba(74,186,122,0)}50%{box-shadow:0 0 30px rgba(74,186,122,.5)}100%{box-shadow:0 0 18px rgba(74,186,122,.3)}}
@@ -139,11 +142,53 @@
   ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg-dark)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--gold-dim)}
   .typing-indicator{display:flex;gap:4px;padding:.5rem 0}.typing-indicator span{width:6px;height:6px;background:var(--text-dim);border-radius:50%;animation:bounce 1.4s infinite}.typing-indicator span:nth-child(2){animation-delay:.2s}.typing-indicator span:nth-child(3){animation-delay:.4s}
   @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+  /* ── Modal overlay ── */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center}
+  .modal-overlay.visible{display:flex}
+  .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:2rem 2.5rem;text-align:center;max-width:480px;width:90%;box-shadow:0 25px 60px rgba(0,0,0,0.5)}
+  .modal h2{margin-bottom:0.5rem;color:var(--gold);font-size:1.4rem}
+  .modal p{margin-bottom:1.5rem;color:var(--text);font-size:1rem;line-height:1.5}
+  .modal-buttons{display:flex;gap:1rem;justify-content:center}
+  .modal-buttons .btn{padding:0.6rem 1.5rem;font-size:0.95rem}
+  .btn-primary{background:transparent;color:var(--gold);border-color:var(--gold)}.btn-primary:hover{background:rgba(201,168,76,.1)}
+  .btn-danger{background:transparent;color:var(--red-light);border-color:var(--red-light)}.btn-danger:hover{background:rgba(192,57,43,.1)}
+  /* ── Mobile end-round banner ── */
+  .mobile-end-banner{display:none;width:100%;background:var(--bg-card);border-bottom:1px solid var(--gold);padding:0 1rem;flex-shrink:0;overflow:hidden;max-height:0;transition:max-height .35s ease, padding .35s ease;text-align:center}
+  .mobile-end-banner.visible{max-height:60px;padding:.5rem 1rem}
+  .mobile-end-banner .btn{padding:.4rem 1.2rem;font-size:.85rem;white-space:nowrap}
+  /* ── Mobile layout ── */
+  @media (max-width: 768px) {
+    .game-body{flex-direction:column}
+    .characters-panel{display:none}
+    .chat-area{flex:1;min-height:0}
+    .chat-spacer{height:33vh;flex-shrink:0}
+    .prompts-panel{width:100%;height:33vh;border-left:none;border-top:1px solid var(--border);position:fixed;bottom:0;left:0;right:0;z-index:50;transition:height .3s ease}
+    .prompts-panel.expanded{height:70vh}
+    .prompts-panel.collapsed{height:12vh}
+    .prompts-header{padding:.6rem .8rem}
+    .prompts-header h3{font-size:.75rem}
+    .prompts-list{padding:.5rem}
+    .prompt-card{padding:.6rem .8rem;font-size:.8rem}
+    .drag-handle{display:flex;align-items:center;justify-content:center;padding:1rem;cursor:pointer;user-select:none;background:var(--bg-card);border-bottom:1px solid var(--border);z-index:60;position:relative;min-height:30px}
+    .drag-handle::after{content:'';width:50px;height:5px;background:var(--text-dim);border-radius:3px}
+    .drag-handle:active{background:var(--bg-card-hover)}
+    .chat-messages{padding:1rem}
+    .game-header{padding:.6rem 1rem}
+    .game-header h2{font-size:1rem}
+    .question-counter{font-size:.8rem}
+    .round-timer{flex-direction:column;align-items:center;gap:.15rem}
+    .round-timer .timer-icon{display:none}
+    .round-timer .round-badge{display:block;font-size:.75rem;padding:.2rem .6rem}
+    .round-info{display:flex;flex-direction:column;align-items:center;gap:.2rem;text-align:center}
+    .round-info .round-badge{display:none}
+    .end-round-wrap{display:none}
+    .mobile-end-banner{display:block;max-height:0}
+  }
 </style>
 </head>
 <body>
 <div id="welcome-screen" class="screen active">
-  <h1>Lányok Napja 2026 – AI Cluedo Workshop</h1>
+  <h1>AI Cluedo Workshop</h1>
   <div class="status-wrap">
   <div class="status-box">
     <div style="display:flex;align-items:center;justify-content:center;gap:1.8rem">
@@ -189,11 +234,13 @@
 <div id="game-screen" class="screen">
   <div class="game-header">
     <h2>🔍 Nyomozás a Kastélyban</h2>
-    <div class="round-timer" id="round-timer"><span class="timer-inner"><span class="timer-icon">⏱️</span> <span class="timer-value" id="timer-value">20:00</span></span></div>
+    <div class="round-timer" id="round-timer"><div class="round-badge" id="round-badge">1. kör</div><span class="timer-inner"><span class="timer-icon">⏱️</span> <span class="timer-value" id="timer-value">20:00</span></span></div>
     <div class="round-info">
-      <div class="round-badge" id="round-badge">1. kör</div>
       <div class="question-counter">Hátralévő kérdések: <span id="q-counter">20</span></div>
     </div>
+  </div>
+  <div class="mobile-end-banner" id="mobile-end-banner">
+    <button class="btn" onclick="showRoundSummary()">Kör befejezése</button>
   </div>
   <div class="timeup-ribbon" id="timeup-ribbon">⏰ Lejárt az idő!</div>
   <div class="game-body">
@@ -212,16 +259,17 @@
     </div>
     <div class="chat-area">
       <div class="chat-messages" id="chat-messages">
-        <div class="chat-welcome" id="chat-welcome">Válassz egy kérdést a jobb oldali panelből, hogy megkérdezd a gyanúsítottakat.</div>
+        <div class="chat-welcome" id="chat-welcome">Válassz egy kérdést az elérhető kérdések panelből, hogy megkérdezd a gyanúsítottakat.</div>
+        <div class="chat-spacer" id="chat-spacer"></div>
       </div>
     </div>
-    <div class="prompts-panel">
+    <div class="prompts-panel" id="prompts-panel">
+      <div class="drag-handle" id="drag-handle" onclick="togglePromptsPanel()"></div>
       <div class="prompts-header">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <h3>Elérhető kérdések</h3>
           <div class="hint-btn-wrap">
-            <button class="hint-btn" id="hint-btn" onclick="useHint()">💡 Tipp</button>
-            <div class="hint-tooltip">Egyszer használható az egész játék során! Felfed egy erős kérdést, amit érdemes feltenni.</div>
+            <button class="hint-btn" id="hint-btn" onclick="showHintModal()">💡 Tipp</button>
           </div>
         </div>
         <div class="prompts-filter" id="prompts-filter"></div>
@@ -248,9 +296,160 @@
   <p>A csapatotok a következő személyt vádolja:</p>
   <div class="locked-suspect" id="locked-suspect-name"></div>
   <p style="margin-top:1rem">Várjátok meg, amíg a többi csapat is végez, és közösen megbeszéljük az eredményt!</p>
+  <button class="btn" onclick="restartGame()" style="margin-top:2.5rem;font-size:.85rem;opacity:.6;border-color:var(--text-dim);color:var(--text-dim)">↺ Új játék indítása</button>
+</div>
+<div id="timeup-modal" class="modal-overlay">
+  <div class="modal">
+    <h2>⏰ Lejárt az idő!</h2>
+    <p>A kör ideje véget ért. Nem lehet több kérdést feltenni.</p>
+    <div class="modal-buttons">
+      <button class="btn btn-primary" onclick="closeTimeupModal()">Kör befejezése</button>
+    </div>
+  </div>
+</div>
+<div id="hint-modal" class="modal-overlay">
+  <div class="modal">
+    <h2>💡 Tipp</h2>
+    <p>Egyszer használható az egész játék során! Felfed egy erős kérdést, amit érdemes feltenni.</p>
+    <div class="modal-buttons">
+      <button class="btn btn-primary" onclick="confirmHint()">Tipp felhasználása</button>
+      <button class="btn btn-danger" onclick="closeHintModal()">Mégsem</button>
+    </div>
+  </div>
 </div>
 <script src="game-data.js"></script>
 <script src="game-explanations.js"></script>
 <script src="game-logic.js"></script>
+<script>
+function restartGame() {
+  clearState();
+  location.reload();
+}
+
+
+function closeTimeupModal() {
+  document.getElementById('timeup-modal').classList.remove('visible');
+  showRoundSummary();
+}
+
+
+function showHintModal() {
+  document.getElementById('hint-modal').classList.add('visible');
+}
+
+
+function closeHintModal() {
+  document.getElementById('hint-modal').classList.remove('visible');
+}
+
+
+function confirmHint() {
+  closeHintModal();
+  useHint();
+}
+
+
+function togglePromptsPanel() {
+  var panel = document.getElementById('prompts-panel');
+  var spacer = document.getElementById('chat-spacer');
+  if (!panel || window.innerWidth > 768) return;
+  if (panel.classList.contains('expanded')) {
+    panel.classList.remove('expanded');
+    panel.classList.add('collapsed');
+    panel.style.height = '12vh';
+    if (spacer) spacer.style.height = '12vh';
+  } else {
+    panel.classList.add('expanded');
+    panel.classList.remove('collapsed');
+    panel.style.height = '70vh';
+    if (spacer) spacer.style.height = '70vh';
+  }
+}
+
+
+function collapsePromptsPanel() {
+  var panel = document.getElementById('prompts-panel');
+  var spacer = document.getElementById('chat-spacer');
+  if (!panel || window.innerWidth > 768) return;
+  panel.classList.remove('expanded');
+  panel.classList.add('collapsed');
+  panel.style.height = '12vh';
+  if (spacer) spacer.style.height = '12vh';
+}
+
+
+// Drag functionality for mobile
+(function() {
+  var panel = document.getElementById('prompts-panel');
+  var handle = document.getElementById('drag-handle');
+  if (!panel || !handle) return;
+
+
+  var startY = 0;
+  var startHeight = 0;
+  var isDragging = false;
+
+
+  handle.addEventListener('touchstart', function(e) {
+    if (window.innerWidth > 768) return;
+    isDragging = true;
+    startY = e.touches[0].clientY;
+    startHeight = panel.offsetHeight;
+    panel.style.transition = 'none';
+  }, { passive: true });
+
+
+  handle.addEventListener('touchmove', function(e) {
+    if (!isDragging) return;
+    var deltaY = startY - e.touches[0].clientY;
+    var newHeight = startHeight + deltaY;
+    var vh = (newHeight / window.innerHeight) * 100;
+    vh = Math.max(12, Math.min(70, vh));
+    panel.style.height = vh + 'vh';
+    var spacer = document.getElementById('chat-spacer');
+    if (spacer) spacer.style.height = vh + 'vh';
+  }, { passive: true });
+
+
+  handle.addEventListener('touchend', function() {
+    if (!isDragging) return;
+    isDragging = false;
+    panel.style.transition = 'height .3s ease';
+    var spacer = document.getElementById('chat-spacer');
+    if (spacer) spacer.style.transition = 'height .3s ease';
+    var currentHeight = panel.offsetHeight;
+    var vh = (currentHeight / window.innerHeight) * 100;
+    if (vh > 50) {
+      panel.classList.add('expanded');
+      panel.classList.remove('collapsed');
+      panel.style.height = '70vh';
+      if (spacer) spacer.style.height = '70vh';
+    } else {
+      panel.classList.remove('expanded');
+      panel.classList.add('collapsed');
+      panel.style.height = '12vh';
+      if (spacer) spacer.style.height = '12vh';
+    }
+  });
+
+
+  // Also keep click as fallback
+  handle.addEventListener('click', function(e) {
+    if (isDragging) {
+      e.preventDefault();
+      return;
+    }
+    togglePromptsPanel();
+  });
+})();
+
+
+// Wrap usePrompt to auto-collapse on mobile
+var originalUsePrompt = usePrompt;
+usePrompt = function(prompt) {
+  originalUsePrompt(prompt);
+  collapsePromptsPanel();
+};
+</script>
 </body>
 </html>
