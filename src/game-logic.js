@@ -45,21 +45,21 @@ function saveState() {
     timeupModalVisible: document.getElementById('timeup-modal') ? document.getElementById('timeup-modal').classList.contains('visible') : false,
     timerClasses: (function() { var el = document.getElementById('round-timer'); return el ? Array.from(el.classList) : []; })()
   };
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e) {}
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch { /* ignore persistence failures */ }
 }
 
 
 function clearState() {
-  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+  try { localStorage.removeItem(SAVE_KEY); } catch { /* ignore persistence failures */ }
 }
 
 
 function restoreState() {
   var raw;
-  try { raw = localStorage.getItem(SAVE_KEY); } catch(e) {}
+  try { raw = localStorage.getItem(SAVE_KEY); } catch { /* ignore persistence failures */ }
   if (!raw) return false;
   var state;
-  try { state = JSON.parse(raw); } catch(e) { return false; }
+  try { state = JSON.parse(raw); } catch { return false; }
   if (!state || state.screen === 'welcome-screen') return false;
 
 
@@ -323,7 +323,6 @@ function renderPrompts() {
 
 // ─── HINT ───
 var hintAnimating = false;
-
 
 function useHint() {
   if (hintUsed || timerExpired || questionsRemaining <= 0) return;
