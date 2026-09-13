@@ -3,6 +3,26 @@
 // ═══════════════════════════════════════
 
 
+// ────────────── WORKSHOP TIME CONFIG ─────────────────────────
+// Set the total available game time in minutes (excluding round 3).
+// Round 3 is always fixed: 5 questions, 7 minutes.
+// Rounds 1 & 2 split the remaining time ~67% / ~33%.
+// Question limits = number of minutes in that round.
+const TOTAL_MINUTES = 37; // ← change this value only
+// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+const _remaining = TOTAL_MINUTES - 7;
+const ROUND_TIMES = [
+  Math.round(_remaining * 0.67) * 60,  // Round 1
+  Math.round(_remaining * 0.33) * 60,  // Round 2
+];
+const ROUND_LIMITS = [
+  Math.round(ROUND_TIMES[0] / 60),  // Round 1: 1 question per minute
+  Math.round(ROUND_TIMES[1] / 60),  // Round 2: 1 question per minute
+];
+// ─────────────────────────────────────────────────────────────
+
+
 const CHARACTERS = {
   istvan: { name: 'István', role: 'Komornyik', emoji: '🎩' },
   katalin: { name: 'Katalin', role: 'Legidősebb lány', emoji: '👩‍💼' },
@@ -16,16 +36,16 @@ const ROUND_INFO = [
   {
     title: '1. Kör – Ismerkedés',
     description: 'Ismerjétek meg a szereplőket! Kérdezzétek ki őket a hátterükről, a kapcsolataikról és a személyiségükről. Próbáljátok kideríteni, kinek milyen viszonya volt az áldozattal.',
-    limit: 20,
-    timeLimit: 1200,
+    limit: ROUND_LIMITS[0],
+    timeLimit: ROUND_TIMES[0],
     roundLabel: '1. kör',
     descShort: '1. kör: Ismerjétek meg a gyanúsítottakat – hátterük, kapcsolataik, személyiségük.',
   },
   {
     title: '2. Kör – Az Este Eseményei',
     description: 'Rekonstruáljátok az este időrendjét! Kérdezzétek ki a szereplőket, mit csináltak aznap este, hol voltak, kit láttak. Próbáljátok összerakni a kirakóst.',
-    limit: 10,
-    timeLimit: 600,
+    limit: ROUND_LIMITS[1],
+    timeLimit: ROUND_TIMES[1],
     roundLabel: '2. kör',
     descShort: '2. kör: Derítsetek fényt az este eseményeire – ki, mikor, hol volt, mit csinált.',
   },
@@ -55,7 +75,11 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'istvan', quality: 'weak', text: 'István, szereted a munkádat?',
-    response: 'Igen, szeretem. Rutinom van, ismerem a kastély minden zugát. Nóra asszony mindig tisztelettel bánt velem, nem úgy, mint egyes családtagok… De ne haragudjon, nem akarok pletykálni.' },
+    response: 'Igen, szeretem. Rutinom van, ismerem a kastély minden zugát. Nóra asszony mindig tisztelettel bánt velem, nem úgy, mint egyes családtagok… De ne haragudjon, nem akarok pletykálni.',
+    followUps: [
+      { target: 'istvan', quality: 'strong', text: 'István, kire gondoltál, amikor azt mondtad, hogy „nem úgy, mint egyes családtagok"? Kivel volt a legrosszabb viszonyod?', response: 'Nos… Katalin. Ő mindig lenézett ránk, a személyzetre. Úgy véli, a szolgáknak láthatatlannak kell lenniük. Viktor is… ő gyakran gúnyolódott, de Katalin volt a legkritikusabb. Egyszer azt mondta: „A helyetek a konyhában van, nem a nappaliban."' }
+    ]
+  },
 
 
   { target: 'istvan', quality: 'strong', text: 'István, hogyan vélekednek rólad a gyerekek? Volt-e bármelyikükkel konfliktusod?',
@@ -63,7 +87,12 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'istvan', quality: 'strong', text: 'István, tudsz-e Nóra végrendeletének részleteiről? Megosztott veled bármit erről?',
-    response: 'Nóra asszony… igen, bízott bennem. Nem mondott el mindent, de annyit igen, hogy két fontos változtatást tervez. Engem hozzá akart adni – jelképes összeg, a hűségemért. És… valakit törölni akart. Nem mondta ki a nevét nekem, de láttam rajta, hogy nagyon csalódott valamelyik gyermekében. Az arckifejezése… olyan szomorú volt, amikor erről beszélt.' },
+    response: 'Nóra asszony… igen, bízott bennem. Nem mondott el mindent, de annyit igen, hogy két fontos változtatást tervez. Engem hozzá akart adni – jelképes összeg, a hűségemért. És… valakit törölni akart. Nem mondta ki a nevét nekem, de láttam rajta, hogy nagyon csalódott valamelyik gyermekében. Az arckifejezése… olyan szomorú volt, amikor erről beszélt.',
+    followUps: [
+      { target: 'istvan', quality: 'strong', text: 'István, hallottad-e, hogy édesanyád bárkitől kérdezett a változtatások előtt? Volt-e, akivel különösen sokat beszélt?', response: 'Katalinnal beszélt a legtöbbet. Ő volt az egyetlen, aki nyíltan ellenezte a változtatásokat. De… hallottam, hogy egyszer Viktorral is vitatkozott a kertben. És Tamással… nos, édesanyám egyszer nagyon dühös volt rá, amiért egy „befektetés" nem sikerült. De azt nem tudom, hogy ez kapcsolódik-e a végrendelethez.' },
+      { target: 'istvan', quality: 'strong', text: 'István, volt-e olyan pillanat, amikor édesanyád féltettől? Azt mondta, hogy valaki fenyegette?', response: '…Nem mondta ki, hogy fenyegették. De a napok előtt a vacsora előtt láttam, hogy remeg a keze, amikor levelet írt. Azt mondta: „Nem tudom, kiben bízhatok már." Úgy éreztem, valaki megfélemlítette. De nem tudom, ki volt.' }
+    ]
+  },
 
 
   { target: 'istvan', quality: 'weak', text: 'István, mióta dolgozol itt?',
@@ -71,7 +100,11 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'istvan', quality: 'strong', text: 'István, láttál-e bármilyen furcsa viselkedést a vacsoránál?',
-    response: 'A vacsora… feszült volt. Nóra asszony megemlítette, hogy változtatni akar a végrendeletén. Mindenki elhallgatott. Katalin szúrósan nézett, Viktor szarkasztikusan felnevetett. Anna szinte nem evett, és kerülte az édesanyja tekintetét – mintha szégyellné magát. Tamás? Ő volt a legnyugodtabb az asztalnál. Túlságosan is nyugodt volt, ha engem kérdeznek.' },
+    response: 'A vacsora… feszült volt. Nóra asszony megemlítette, hogy változtatni akar a végrendeletén. Mindenki elhallgatott. Katalin szúrósan nézett, Viktor szarkasztikusan felnevetett. Anna szinte nem evett, és kerülte az édesanyja tekintetét – mintha szégyellné magát. Tamás? Ő volt a legnyugodtabb az asztalnál. Túlságosan is nyugodt volt, ha engem kérdeznek.',
+    followUps: [
+      { target: 'istvan', quality: 'strong', text: 'István, miért tűnt Tamás túlságosan is nyugodtnak? Volt-e valami furcsa a viselkedésében?', response: 'Nos… ő nem sokat evett. És a keze alatt a szalvéta folyamatosan rángatott, mintha ideges lenne. De az arca üres volt, semmilyen érzelem nem látszott rajta. Mintha… mintha már tudta volna, mi fog történni. De ez csak az érzésem volt.' }
+    ]
+  },
 
 
   { target: 'istvan', quality: 'weak', text: 'István, te is gyanúsított vagy?',
@@ -84,7 +117,11 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'katalin', quality: 'strong', text: 'Katalin, hogyan viszonyultál édesanyád döntéséhez, hogy a komornyikot is belefoglalja a végrendeletbe?',
-    response: 'Őszintén? Felháborított. István egy alkalmazott. Hűséges, rendben – de a családi vagyon a családé! Édesanyámnak megmondtam: „Ha el akarod ismerni a szolgálatait, adj neki végkielégítést, de ne a végrendeleten keresztül." Vitatkoztunk ezen, de nem… nem volt erőszakos. Én nem vagyok ilyen.' },
+    response: 'Őszintén? Felháborított. István egy alkalmazott. Hűséges, rendben – de a családi vagyon a családé! Édesanyámnak megmondtam: „Ha el akarod ismerni a szolgálatait, adj neki végkielégítést, de ne a végrendeleten keresztül." Vitatkoztunk ezen, de nem… nem volt erőszakos. Én nem vagyok ilyen.',
+    followUps: [
+      { target: 'katalin', quality: 'strong', text: 'Katalin, mondtad, hogy vitatkoztatok. Volt-e olyan pillanat, amikor feldühödtél annyira, hogy… bármit tettél volna?', response: '…Feldühödtem? Igen. De sosem lettem erőszakos. Én az érzéseimet szavakkal fejezem ki, nem tettekkel. Azt hiszem, István félt tőlem, de sosem bántottam. Én csak… elvártam, hogy édesanyám értse meg, miért fontos a család öröksége.' }
+    ]
+  },
 
 
   { target: 'katalin', quality: 'strong', text: 'Katalin, milyen volt a kapcsolatod az édesanyáddal az utóbbi időben?',
@@ -96,7 +133,12 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'katalin', quality: 'strong', text: 'Katalin, tudtad-e, hogy édesanyád valakit ki akar törölni a végrendeletből? Ha igen, kit?',
-    response: '…Igen. Édesanyám vacsorán kívül is beszélt erről nekem. Megmondta, hogy Tamást akarja törölni. Nem mondta el pontosan, miért, csak annyit, hogy „elárulta a család bizalmát." Én nem kérdeztem tovább. De… ezt nem mondtam el senkinek aznap este. Legalábbis nem szándékosan.' },
+    response: '…Igen. Édesanyám vacsorán kívül is beszélt erről nekem. Megmondta, hogy Tamást akarja törölni. Nem mondta el pontosan, miért, csak annyit, hogy „elárulta a család bizalmát." Én nem kérdeztem tovább. De… ezt nem mondtam el senkinek aznap este. Legalábbis nem szándékosan.',
+    followUps: [
+      { target: 'katalin', quality: 'strong', text: 'Katalin, mondtad-e bárkinek, hogy Tamást akarják törölni? Volt-e, akivel megosztottad ezt az információt?', response: '…Viktorral beszéltem róla a dolgozószobában. Ő nem értett egyet, és ez lett a veszekedésünk oka. De Viktor sem mondta el senkinek… legalábbis remélem. De most, hogy belegondolok… Viktor elég hangos volt. Lehet, hogy valaki hallotta.' },
+      { target: 'katalin', quality: 'strong', text: 'Katalin, miért gondoltad, hogy Tamás „elárulta a család bizalmát"? Volt-e konkrét esemény?', response: 'Édesanyám nem mondta el a részleteket. De hallottam, hogy Tamás egyszer „befektetésbe" bevonta édesanyámat, és az nem sikerült. Édesanyám nagyon dühös volt rá. Úgy éreztem, Tamás kihasználta édesanyám jóindulatát. Ez… ez nem elfogadható.' }
+    ]
+  },
 
 
   { target: 'katalin', quality: 'weak', text: 'Katalin, te vagy a legidősebb?',
@@ -129,7 +171,11 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'anna', quality: 'strong', text: 'Anna, hallottál-e aznap este bármilyen beszélgetést az édesanyád és valaki más között?',
-    response: 'Igen! Éppen összeszedtem a bátorságomat, hogy beszéljek édesanyámmal, amikor meghallottam, ahogy a dolgozószobában beszél Istvánnal. Édesanyám azt mondta: „Hazudtak nekem. Azt hittem, megbízhatok bennük…" István próbálta csitítani: „Asszonyom, kérem… mindig is gyengék voltak. Ne tegye ezt velük." Aztán édesanyám: „Törölni fogom a végrendeletből. Nem tűröm tovább!" Én… azonnal tudtam, hogy rólam van szó. Elrohantam sírva.' },
+    response: 'Igen! Éppen összeszedtem a bátorságomat, hogy beszéljek édesanyámmal, amikor meghallottam, ahogy a dolgozószobában beszél Istvánnal. Édesanyám azt mondta: „Hazudtak nekem. Azt hittem, megbízhatok bennük…" István próbálta csitítani: „Asszonyom, kérem… mindig is gyengék voltak. Ne tegye ezt velük." Aztán édesanyám: „Törölni fogom a végrendeletből. Nem tűröm tovább!" Én… azonnal tudtam, hogy rólam van szó. Elrohantam sírva.',
+    followUps: [
+      { target: 'anna', quality: 'strong', text: 'Anna, miért gondoltad, hogy rólad van szó? Volt-e okod arra, hogy édesanyád ki akarjon törölni?', response: 'Mert… mert Tamás is beszélt édesanyámmal. Én hallottam, hogy édesanyám dühös volt rá, amiért a befektetés nem jött be. Azt mondta: „Nem bízhatok benned." Úgy éreztem, én vagyok a következő, akit kizárnak. A szerencsejáték, az adósságok… mindenki tudott róla. Úgy éreztem, édesanyám szégyell engem.' }
+    ]
+  },
 
 
   { target: 'anna', quality: 'weak', text: 'Anna, van-e bármi, amit el akarsz mondani?',
@@ -137,7 +183,12 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'anna', quality: 'strong', text: 'Anna, bízol valakiben a családban? Van, akihez közel állsz?',
-    response: 'Tamás… Tamás mindig kedves volt hozzám. Aznap este, amikor sírva kiszaladtam a kertbe, ő talált rám. Elmondtam neki mindent – a szerencsejátékot, az adósságokat, amit hallottam. Ő vigasztalt. Visszakísért a szobámba. Utána… nem emlékszem semmire. Olyan hirtelen elaludtam, mintha… nem tudom. Furcsán mély alvás volt.' },
+    response: 'Tamás… Tamás mindig kedves volt hozzám. Aznap este, amikor sírva kiszaladtam a kertbe, ő talált rám. Elmondtam neki mindent – a szerencsejátékot, az adósságokat, amit hallottam. Ő vigasztalt. Visszakísért a szobámba. Utána… nem emlékszem semmire. Olyan hirtelen elaludtam, mintha… nem tudom. Furcsán mély alvás volt.',
+    followUps: [
+      { target: 'anna', quality: 'strong', text: 'Anna, Tamás mondott-e bármit arról, hogy mit tegyél? Azt javasolta, hogy beszélj édesanyáddal?', response: '…Igen. Azt mondta, hogy ne menj édesanyámhoz, mert túl fáradt vagyok. Azt mondta, pihenjek, és majd reggel beszélhetek. Azt is mondta, hogy édesanyám nem fogja megérteni a szerencsejátékot. Úgy éreztem, ő meg akar védeni a családtól. De… miért kérdezed?' },
+      { target: 'anna', quality: 'strong', text: 'Anna, Tamás adott-e neked bármit, mielőtt elaludtál? Gyógyszer, víz, bármi?', response: 'Igen, hozott egy pohár vizet. Azt mondta, igyak, mert a sírástól kiszáradok. De… most, hogy belegondolok, a víznek furcsa íze volt. Nem rossz, csak… furcsa. És utána azonnal elaludtam. Nem gondoltam rá eddig.' }
+    ]
+  },
 
 
   // ── TAMÁS (Killer / Offspring Y) ──
@@ -146,7 +197,11 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'tamas', quality: 'strong', text: 'Tamás, milyen pénzügyi kapcsolatod volt az édesanyáddal? Volt-e bármilyen üzleti ügy köztetek?',
-    response: 'Édesanyámmal? Nos… volt egy üzleti lehetőség, amibe bevontam őt. Egy befektetés. Sajnos nem jött be, és édesanyám pénzt veszített rajta. Ő haragudott, de én megpróbáltam megmagyarázni, hogy a piac kiszámíthatatlan. Ezeket a dolgokat nem mindenki érti.' },
+    response: 'Édesanyámmal? Nos… volt egy üzleti lehetőség, amibe bevontam őt. Egy befektetés. Sajnos nem jött be, és édesanyám pénzt veszített rajta. Ő haragudott, de én megpróbáltam megmagyarázni, hogy a piac kiszámíthatatlan. Ezeket a dolgokat nem mindenki érti.',
+    followUps: [
+      { target: 'tamas', quality: 'strong', text: 'Tamás, mennyi pénzt veszített édesanyád ezen a befektetésen? Volt-e ez elegendő ahhoz, hogy… dühös legyen?', response: '…Egy jelentős összeg. De édesanyám gazdag volt, ez nem tette tönkre. Legalábbis nem anyagilag. De… talán ez volt az utolsó csepp a pohárban. Ő már akkor is dühös volt Tamásra, amiért a „befektetése" nem sikerült. Úgy éreztem, édesanyám kezdte elveszíteni a bizalmát a családban.' }
+    ]
+  },
 
 
   { target: 'tamas', quality: 'strong', text: 'Tamás, az édesanyád csalódott volt benned? Tudod, miért akart változtatni a végrendeleten?',
@@ -158,7 +213,11 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'tamas', quality: 'strong', text: 'Tamás, más családtagot is bevontál korábban édesanyádhoz hasonló „befektetésbe"?',
-    response: '…Ez nem releváns. De ha már kérdezitek: igen, egyszer segítettem egy másik családtagnak is egy üzleti döntésben. Az sem sikerült jól. De ez nem jelenti, hogy szándékosan csináltam bármit! Az üzlet kockázatos, ezt mindenki tudja.' },
+    response: '…Ez nem releváns. De ha már kérdezitek: igen, egyszer segítettem egy másik családtagnak is egy üzleti döntésben. Az sem sikerült jól. De ez nem jelenti, hogy szándékosan csináltam bármit! Az üzlet kockázatos, ezt mindenki tudja.',
+    followUps: [
+      { target: 'tamas', quality: 'strong', text: 'Tamás, melyik családtagról volt szó? És miért nem sikerült az üzlet?', response: '…Annáról. Én segítettem neki egy befektetésben. Szerencsejáték, kaszinó… ő nem értette a kockázatokat. Elvesztette a pénzét. Én csak… tanácsot adtam. Nem volt szándékos. De ő mindig is gyenge volt, nem tudott dönteni.' }
+    ]
+  },
 
 
   { target: 'tamas', quality: 'weak', text: 'Tamás, hogy érzed magad a történtek után?',
@@ -166,7 +225,11 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'tamas', quality: 'strong', text: 'Tamás, miért kerülöd Istvánt? Feltűnt, hogy nem szívesen vagy a közelében.',
-    response: '…Nem kerülöm. Csak nincs mit megbeszélnem egy komornyikkal. Ő a személyzet, én a család tagja vagyok. Ennyi.' },
+    response: '…Nem kerülöm. Csak nincs mit megbeszélnem egy komornyikkal. Ő a személyzet, én a család tagja vagyok. Ennyi.',
+    followUps: [
+      { target: 'tamas', quality: 'strong', text: 'Tamás, István azt állítja, hogy édesanyád sokat beszélt vele a végrendeletről. Te hallottál-e erről?', response: '…Igen, hallottam. Édesanyám sokat beszélt Istvánnal. De ez… ez nem jelenti, hogy István fontosabb, mint a család. Édesanyám csak… magányos volt. De István túl közel került hozzá. Ez… ez nem helyes.' }
+    ]
+  },
 
 
   // ── VIKTOR (Offspring 4 - Red Herring) ──
@@ -179,11 +242,19 @@ const ROUND1_PROMPTS = [
 
 
   { target: 'viktor', quality: 'strong', text: 'Viktor, milyen volt a viszonyod az édesanyáddal?',
-    response: 'Édesanyám… ő legalább nem vetett meg nyíltan, mint Katalin. De éreztem, hogy csalódott bennem. Soha nem mondta ki, de a szemében láttam. Mégis, ő volt az egyetlen, aki néha felhívott és megkérdezte, hogy vagyok. Most ez is megszűnt.' },
+    response: 'Édesanyám… ő legalább nem vetett meg nyíltan, mint Katalin. De éreztem, hogy csalódott bennem. Soha nem mondta ki, de a szemében láttam. Mégis, ő volt az egyetlen, aki néha felhívott és megkérdezte, hogy vagyok. Most ez is megszűnt.',
+    followUps: [
+      { target: 'viktor', quality: 'strong', text: 'Viktor, beszéltél-e édesanyáddal a végrendeletéről? Tudtad-e, hogy változtatni akar?', response: '…Nem, ő nem mondta el nekem. De hallottam a vacsoránál, hogy szóba hozta. Azt mondta, hogy „valakit" törölni fog. Nem tudtam, kire gondolt. De… most, hogy belegondolok, talán Tamásra. Viktor támogatta Tamást, és édesanyám dühös volt rá a befektetés miatt. De ez csak tipp.' }
+    ]
+  },
 
 
   { target: 'viktor', quality: 'weak', text: 'Viktor, miért van zúzódás a karodon?',
-    response: 'Ez… ez semmi. Megütöttem valamit. Nem fontos.' },
+    response: 'Ez… ez semmi. Megütöttem valamit. Nem fontos.',
+    followUps: [
+      { target: 'viktor', quality: 'strong', text: 'Viktor, a zúzódás a karodon – mikor keletkezett? Volt-e a kastélyban, vagy valahol máshol?', response: '…A kastélyban. A dolgozószobában. Katalinnal veszekedtünk. Leestem, megütöttem a karom. De nem ő ütött meg, csak lökdösött. Az ajtófélfába csapódtam. Ezt már elmondtam. Miért kérdeztetek újra?' }
+    ]
+  },
 
 
   { target: 'viktor', quality: 'strong', text: 'Viktor, mi történt közted és Katalin között aznap este a dolgozószobában?',
@@ -214,7 +285,11 @@ const ROUND2_PROMPTS = [
 
 
   { target: 'istvan', quality: 'strong', text: 'István, láttál-e bárkit a dolgozószoba közelében este 11 óra után?',
-    response: 'Igen! Ez fontos. 11:10 körül, amikor az ebédlőből átmentem a konyhába, láttam valakit, aki sietve hagyta el a dolgozószoba irányát. A kabátját igazgatta, a mellkasánál, és hallottam egy apró szakadás-szerű hangot. Éreztem egy erős parfümillatot is. Nem láttam tisztán az arcát – sötét volt a folyosón – de biztos vagyok benne, hogy nem személyzeti tag volt.' },
+    response: 'Igen! Ez fontos. 11:10 körül, amikor az ebédlőből átmentem a konyhába, láttam valakit, aki sietve hagyta el a dolgozószoba irányát. A kabátját igazgatta, a mellkasánál, és hallottam egy apró szakadás-szerű hangot. Éreztem egy erős parfümillatot is. Nem láttam tisztán az arcát – sötét volt a folyosón – de biztos vagyok benne, hogy nem személyzeti tag volt.',
+    followUps: [
+      { target: 'istvan', quality: 'strong', text: 'István, a kabátigazgatás – volt-e gomb a kabáton? Emlékszel-e a kabát színére?', response: '…Fekete vagy sötétkék kabát volt. És igen, éreztem, hogy a mellkasánál hiányzott valami – mintha leszakadt volna egy gomb. A szakadás-szerű hang is erre utalt. De nem láttam tisztán, csak a sziluettet.' }
+    ]
+  },
 
 
   { target: 'istvan', quality: 'strong', text: 'István, milyen parfümillatot éreztél? Fel tudnád ismerni?',
@@ -223,7 +298,11 @@ const ROUND2_PROMPTS = [
 
   // ── KATALIN ──
   { target: 'katalin', quality: 'strong', text: 'Katalin, pontosan mit csináltál este 10:30 után? Van-e bizonyíték az alibidre?',
-    response: '10:30-kor visszamentem a szobámba. Átöltöztem, majd videóhívást indítottam egy üzleti partneremmel. A hívás 10:35-től 11:15-ig tartott – a telefon naplójában benne van. Utána lefeküdtem, 11:20 körül elaludtam. Egy cseléd látta, hogy ég a szobámban a lámpa.' },
+    response: '10:30-kor visszamentem a szobámba. Átöltöztem, majd videóhívást indítottam egy üzleti partneremmel. A hívás 10:35-től 11:15-ig tartott – a telefon naplójában benne van. Utána lefeküdtem, 11:20 körül elaludtam. Egy cseléd látta, hogy ég a szobámban a lámpa.',
+    followUps: [
+      { target: 'katalin', quality: 'strong', text: 'Katalin, a videóhívás során hallottál-e bármi furcsát a kastélyból? Zajokat, lépéseket?', response: '…Nem, a hívás során a fülhallgató volt rajtam. De 11:10 körül hallottam valami furcsát a folyosóról – mintha valaki sietett volna. De nem nyitottam ki, mert épp a hívás közepén voltam. Most, hogy belegondolok… talán Viktor lehetett az, aki éjjel sétált.' }
+    ]
+  },
 
 
   { target: 'katalin', quality: 'weak', text: 'Katalin, hol voltál aznap este?',
@@ -240,7 +319,12 @@ const ROUND2_PROMPTS = [
 
   // ── ANNA ──
   { target: 'anna', quality: 'strong', text: 'Anna, rekonstruáld az estédet 10 órától! Hol voltál, mit csináltál, kivel találkoztál?',
-    response: '10:20-kor visszamentem a szobámba. Összeszedtem a bátorságomat, hogy beszéljek édesanyámmal. 10:30 körül odamentem a dolgozószobához, de hallottam, ahogy édesanyám és István beszélnek a végrendeletről. Meghallottam, hogy édesanyám valakit törölni akar. Azt hittem, engem… Elsírtam magam és kiszaladtam a kertbe. 10:35-10:50 körül Tamás talált rám. Elmondtam neki mindent. Ő vigasztalt. 11 óra körül visszakísért a szobámba. Megbotlottam a folyosón, ő elkapott, de közben a ruhám elszakadt. A szobámban… hirtelen nagyon álmos lettem. Ennyi az, amire emlékszem.' },
+    response: '10:20-kor visszamentem a szobámba. Összeszedtem a bátorságomat, hogy beszéljek édesanyámmal. 10:30 körül odamentem a dolgozószobához, de hallottam, ahogy édesanyám és István beszélnek a végrendeletről. Meghallottam, hogy édesanyám valakit törölni akar. Azt hittem, engem… Elsírtam magam és kiszaladtam a kertbe. 10:35-10:50 körül Tamás talált rám. Elmondtam neki mindent. Ő vigasztalt. 11 óra körül visszakísért a szobámba. Megbotlottam a folyosón, ő elkapott, de közben a ruhám elszakadt. A szobámban… hirtelen nagyon álmos lettem. Ennyi az, amire emlékszem.',
+    followUps: [
+      { target: 'anna', quality: 'strong', text: 'Anna, miért szakadt el a ruhád, amikor megbotlottál? Hol szakadt?', response: 'A kabátom ujjánál… vagy a vállamnál. Nem emlékszem pontosan. De Tamás segített felállni, és közben a ruhám ráncolódott. Azt hiszem, a varrás gyenge volt. De miért kérdezed?' },
+      { target: 'anna', quality: 'strong', text: 'Anna, Tamás kísért be a szobádba? Vagy csak az ajtóig?', response: 'Be. Ő segített, mert nagyon fáradt voltam. Azt mondta, igyak vizet, és ő hozott is. Utána… utána elaludtam. Nem tudom, mikor távozott.' }
+    ]
+  },
 
 
   { target: 'anna', quality: 'weak', text: 'Anna, aludtál aznap éjjel?',
@@ -257,7 +341,11 @@ const ROUND2_PROMPTS = [
 
   // ── TAMÁS ──
   { target: 'tamas', quality: 'strong', text: 'Tamás, részletezd az estédet 10 órától percről percre! Hol voltál, kit láttál?',
-    response: '10:20 körül hallottam, ahogy édesanyám valakivel beszél az örökségről. Kimentem a kertbe sétálni, 10:30 körül. Ott talált rám Anna, sírt, szegény. Megvigasztaltam, meghallgattam. 11 óra körül visszakísértem a szobájába. Utána egyenesen a saját szobámba mentem, 11:10 körül. Lefeküdtem.' },
+    response: '10:20 körül hallottam, ahogy édesanyám valakivel beszél az örökségről. Kimentem a kertbe sétálni, 10:30 körül. Ott talált rám Anna, sírt, szegény. Megvigasztaltam, meghallgattam. 11 óra körül visszakísértem a szobájába. Utána egyenesen a saját szobámba mentem, 11:10 körül. Lefeküdtem.',
+    followUps: [
+      { target: 'tamas', quality: 'strong', text: 'Tamás, miért sétáltál a kertben 10:20-kor? Hallottad-e a beszélgetést édesanyáddal?', response: '…Igen, hallottam. Édesanyám valakivel beszélt a végrendeletről. Nem akartam hallgatni, de… nem tudtam elkerülni. Azt mondta, hogy valakit törölni fog. Nem tudtam, kire gondolt. De… most, hogy belegondolok, talán rám. A befektetés miatt. Ez… ez megijesztett.' }
+    ]
+  },
 
 
   { target: 'tamas', quality: 'weak', text: 'Tamás, mit csináltál aznap este?',
@@ -274,7 +362,11 @@ const ROUND2_PROMPTS = [
 
   // ── VIKTOR ──
   { target: 'viktor', quality: 'strong', text: 'Viktor, mikor hagytad el a kastélyt, és mikor tértél vissza? Látott-e bárki?',
-    response: 'A vita után Katalinnal – talán 10:40 körül – kimentem. Dühös voltam, a viharban sétáltam a birtok körül. Elég későn jöttem vissza, talán éjfél körül. Tudom, ez nem jó alibi. Nem látott senki, mert vihar volt. De amikor visszajöttem, láttam, hogy Tamás épp a szobájába ment. Legalábbis azt hiszem, ő volt. Sötét volt.' },
+    response: 'A vita után Katalinnal – talán 10:40 körül – kimentem. Dühös voltam, a viharban sétáltam a birtok körül. Elég későn jöttem vissza, talán éjfél körül. Tudom, ez nem jó alibi. Nem látott senki, mert vihar volt. De amikor visszajöttem, láttam, hogy Tamás épp a szobájába ment. Legalábbis azt hiszem, ő volt. Sötét volt.',
+    followUps: [
+      { target: 'viktor', quality: 'strong', text: 'Viktor, mikor láttad Tamást? Biztos vagyok benne, hogy ő volt? Mit csinált?', response: '…Éjfél körül, talán 11:55-kor. A főlépcsőn lépkedett felfelé. Nem nézett körül, csak sietett. A kabátját húzgálta, mintha valami hiányzott volna róla. De nem szóltam neki, én is csak ágyba akartam menni. Most, hogy belegondolok… furcsa volt, hogy annyira sietett.' }
+    ]
+  },
 
 
   { target: 'viktor', quality: 'weak', text: 'Viktor, merre jártál aznap este?',
@@ -304,11 +396,20 @@ const ROUND3_PROMPTS = [
 
 
   { target: 'nyomozo', quality: 'strong', text: 'Nyomozó, a komornyik által észlelt parfümillat kinek a parfümje lehet? Mond-e ez bármit a tettesről?',
-    response: 'A komornyik az illatot Anna parfümjéhez hasonlította – erős, olcsó, édes. Ez két dolgot jelenthet: vagy Anna volt ott, vagy valaki, aki nemrég szoros kontaktusban volt Annával. Mivel Anna azt állítja, hogy Tamás átölelte, és Tamás ruháján is érezhető Anna parfümje, a tettes lehetett Tamás is, akire átment az illat. Ez fontos megkülönböztetés!' },
+    response: 'A komornyik az illatot Anna parfümjéhez hasonlította – erős, olcsó, édes. Ez két dolgot jelenthet: vagy Anna volt ott, vagy valaki, aki nemrég szoros kontaktusban volt Annával. Mivel Anna azt állítja, hogy Tamás átölelte, és Tamás ruháján is érezhető Anna parfümje, a tettes lehetett Tamás is, akire átment az illat. Ez fontos megkülönböztetés!',
+    followUps: [
+      { target: 'nyomozo', quality: 'strong', text: 'Nyomozó, ha Tamás ruháján volt Anna parfümje, és a komornyik ezt az illatot érezte a dolgozószoba közelében, akkor Tamás lehetett a tettes?', response: 'Lehetett. De van egy fontos különbség: Anna azt állítja, hogy Tamás átölelte a kertben, 10:35-10:50 körül. A komornyik 11:10-kor érezte az illatot a dolgozószoba közelében. Ha Tamás 11:10-kor volt ott, akkor miért állítja, hogy 11:10-kor a szobájába ment? Ez időbeli ellentmondás.' }
+    ]
+  },
 
 
   { target: 'nyomozo', quality: 'strong', text: 'Nyomozó, van-e bizonyíték arra, hogy valaki altató szert használt aznap este?',
-    response: 'Anna viselkedése reggel feltűnő: szédült, alig bírt állni, a memóriája hézagos, és „mintha kikapcsolták volna." Nem ivott sokat a vacsoránál, tehát ez nem alkohol hatása. Ha valaki altatót tett a vizébe – amit Tamás hozott neki –, az megmagyarázná az állapotát. Tamás zsebében egyébként egy nyugtatós üvegcsét találtunk.' },
+    response: 'Anna viselkedése reggel feltűnő: szédült, alig bírt állni, a memóriája hézagos, és „mintha kikapcsolták volna." Nem ivott sokat a vacsoránál, tehát ez nem alkohol hatása. Ha valaki altatót tett a vizébe – amit Tamás hozott neki –, az megmagyarázná az állapotát. Tamás zsebében egyébként egy nyugtatós üvegcsét találtunk.',
+    followUps: [
+      { target: 'nyomozo', quality: 'strong', text: 'Nyomozó, miért volt Tamásnál nyugtatós üvegcsé? Volt-e receptje?', response: 'Nem volt receptje. Az üvegcsén nem volt címke. Ez illegális vagy vény nélkül kapható szer lehet. De a lényeg: ha Tamás adta Annának a vizet, és a vízben volt altató, akkor Tamásnak volt lehetősége elaltatni Annát – és így biztosítani, hogy ne legyen alibije.' },
+      { target: 'nyomozo', quality: 'strong', text: 'Nyomozó, ha Tamás elaltatta Annát, miért tette ezt? Mi volt a célja?', response: 'Ha Tamás elaltatta Annát, akkor biztosította, hogy Anna ne legyen tanúja annak, amit éjjel tett. De nem csak ez: ha Tamás a nyakláncot is Annának rejtte, akkor tökéletes bűnbakot csinált belőle. Anna pénzügyi gondokkal küzdött, parfümje a helyszínen volt, és nem volt alibije. Ez… ez nagyon jól megtervezett.' }
+    ]
+  },
 
 
   { target: 'nyomozo', quality: 'weak', text: 'Nyomozó, kinek volt motívuma?',
@@ -316,7 +417,11 @@ const ROUND3_PROMPTS = [
 
 
   { target: 'nyomozo', quality: 'strong', text: 'Nyomozó, ki tudta biztosan, hogy Tamást akarják törölni a végrendeletből, nem Annát?',
-    response: 'Ez kulcskérdés! Nóra csak Katalinnak mondta el közvetlenül, hogy Tamást akarja törölni. A vacsoránál elhangzott, hogy „valakit" törölni fog, de a nevet nem mondta ki. Anna feltételezte, hogy ő az – mert meghallotta a beszélgetést, és a saját helyzetéből kiindulva magára vette. Tamás hallhatta Katalin és Viktor vitáját, ahol Tamás neve elhangzott. Tehát Tamás TUDTA, hogy őt törlik – és ennek ellenére Annára tereli a gyanút.' },
+    response: 'Ez kulcskérdés! Nóra csak Katalinnak mondta el közvetlenül, hogy Tamást akarja törölni. A vacsoránál elhangzott, hogy „valakit" törölni fog, de a nevet nem mondta ki. Anna feltételezte, hogy ő az – mert meghallotta a beszélgetést, és a saját helyzetéből kiindulva magára vette. Tamás hallhatta Katalin és Viktor vitáját, ahol Tamás neve elhangzott. Tehát Tamás TUDTA, hogy őt törlik – és ennek ellenére Annára tereli a gyanút.',
+    followUps: [
+      { target: 'nyomozo', quality: 'strong', text: 'Nyomozó, ha Tamás tudta, hogy őt törlik, miért nem próbált megbeszélni ezt édesanyjával?', response: 'Ez a kérdés! Tamás nem próbált megbeszélni. Ehelyett… hallottam, hogy édesanyám megfélemlítette. De ha Tamás tudta, hogy őt törlik, akkor a motívuma volt megölni édesanyámat – hogy megakadályozza a változtatást. De ehhez idő kellett: a gyilkosság a vacsora után történt, amikor Tamás már tudott a döntésről.' }
+    ]
+  },
 
 
   { target: 'nyomozo', quality: 'strong', text: 'Nyomozó, a gyöngynyaklánc eltűnése hogyan kapcsolódhat az ügyhöz? Találtak-e nyomot?',
