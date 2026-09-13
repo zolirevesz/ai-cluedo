@@ -1,10 +1,12 @@
 import eslint from '@eslint/js';
 
-export default tseslint.config(
+export default [
   eslint.configs.recommended,
+
   {
     languageOptions: {
       sourceType: 'module',
+
       globals: {
         console: 'readonly',
         document: 'readonly',
@@ -15,8 +17,10 @@ export default tseslint.config(
         setInterval: 'readonly'
       }
     },
+
     rules: {
       'no-empty': ['error', { allowEmptyCatch: true }],
+
       'no-unused-vars': ['error', {
         args: 'after-used',
         caughtErrors: 'none',
@@ -24,4 +28,4 @@ export default tseslint.config(
       }]
     }
   }
-);
+];
