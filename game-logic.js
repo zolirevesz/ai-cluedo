@@ -15,6 +15,134 @@ let timerInterval = null;
 let timerExpired = false;
 let hintUsed = false;
 let highlightedPromptId = null;
+let newlyUnlockedPromptIds = new Set();
+
+
+// ─── PERSISTENCE ───
+var SAVE_KEY = 'ai_cluedo_state';
+
+
+function saveState() {
+  var activeScreen = document.querySelector('.screen.active');
+  var screenId = activeScreen ? activeScreen.id : 'welcome-screen';
+  var chatContainer = document.getElementById('chat-messages');
+  var state = {
+    screen: screenId,
+    currentRound: currentRound,
+    questionsRemaining: questionsRemaining,
+    usedPromptIds: Array.from(usedPromptIds),
+    usedPromptsThisRound: usedPromptsThisRound,
+    selectedSuspect: selectedSuspect,
+    hintUsed: hintUsed,
+    highlightedPromptId: highlightedPromptId,
+    newlyUnlockedPromptIds: Array.from(newlyUnlockedPromptIds),
+    timerSeconds: timerSeconds,
+    timerExpired: timerExpired,
+    chatHtml: chatContainer ? chatContainer.innerHTML : '',
+    promptsDisabled: document.querySelector('.prompts-panel') ? document.querySelector('.prompts-panel').classList.contains('disabled') : false,
+    endRoundVisible: document.getElementById('end-round-wrap') ? document.getElementById('end-round-wrap').classList.contains('visible') : false,
+    timeupModalVisible: document.getElementById('timeup-modal') ? document.getElementById('timeup-modal').classList.contains('visible') : false,
+    timerClasses: (function() { var el = document.getElementById('round-timer'); return el ? Array.from(el.classList) : []; })()
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+
+function clearState() {
+  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+}
+
+
+function restoreState() {
+  var raw;
+  try { raw = localStorage.getItem(SAVE_KEY); } catch(e) {}
+  if (!raw) return false;
+  var state;
+  try { state = JSON.parse(raw); } catch(e) { return false; }
+  if (!state || state.screen === 'welcome-screen') return false;
+
+
+  currentRound = state.currentRound || 0;
+  questionsRemaining = state.questionsRemaining || 0;
+  usedPromptIds = new Set(state.usedPromptIds || []);
+  usedPromptsThisRound = state.usedPromptsThisRound || [];
+  selectedSuspect = state.selectedSuspect || null;
+  hintUsed = state.hintUsed || false;
+  highlightedPromptId = state.highlightedPromptId || null;
+  newlyUnlockedPromptIds = new Set(state.newlyUnlockedPromptIds || []);
+  timerSeconds = state.timerSeconds || 0;
+  timerExpired = state.timerExpired || false;
+
+
+  var info = ROUND_INFO[currentRound];
+  currentPrompts = getPromptsForRound(currentRound);
+
+
+  if (info) {
+    var roundBadge = document.getElementById('round-badge');
+    if (roundBadge) roundBadge.textContent = info.roundLabel;
+  }
+  var qCounter = document.getElementById('q-counter');
+  if (qCounter) qCounter.textContent = questionsRemaining;
+  var hintBtn = document.getElementById('hint-btn');
+  if (hintBtn) hintBtn.disabled = hintUsed;
+
+
+  var chatContainer = document.getElementById('chat-messages');
+  if (chatContainer && state.chatHtml) chatContainer.innerHTML = state.chatHtml;
+
+
+  if (state.promptsDisabled) {
+    var panel = document.querySelector('.prompts-panel');
+    if (panel) panel.classList.add('disabled');
+  }
+  if (state.endRoundVisible) {
+    var erw = document.getElementById('end-round-wrap');
+    if (erw) erw.classList.add('visible');
+    var banner = document.getElementById('mobile-end-banner');
+    if (banner) banner.classList.add('visible');
+  }
+  if (state.timeupModalVisible) {
+    var tModal = document.getElementById('timeup-modal');
+    if (tModal) tModal.classList.add('visible');
+    var timerEl = document.getElementById('round-timer');
+    if (timerEl) timerEl.classList.add('expired');
+  }
+  if (state.timerClasses) {
+    var timerEl2 = document.getElementById('round-timer');
+    if (timerEl2) state.timerClasses.forEach(function(c) { timerEl2.classList.add(c); });
+  }
+
+
+  if (state.screen === 'accusation-screen') {
+    showAccusation();
+    return true;
+  }
+
+
+  if (state.screen === 'game-screen' || state.screen === 'round-summary') {
+    renderFilters();
+    renderPrompts();
+  }
+
+
+  showScreen(state.screen);
+
+
+  if (state.screen === 'game-screen' && !timerExpired && timerSeconds > 0) {
+    startTimer(timerSeconds);
+  } else {
+    updateTimerDisplay();
+  }
+
+
+  return true;
+}
+
+
+window.addEventListener('DOMContentLoaded', function() {
+  restoreState();
+});
 
 
 function shuffleArray(arr) {
@@ -42,6 +170,7 @@ function showScreen(id) {
 
 // ─── START GAME ───
 function startGame() {
+  clearState();
   currentRound = 0;
   hintUsed = false;
   highlightedPromptId = null;
@@ -71,7 +200,7 @@ function enterRound() {
   document.getElementById('q-counter').textContent = questionsRemaining;
   var welcomeText = currentRound === 2
     ? 'K\u00e9rdezz\u00e9tek a nyomoz\u00f3t! \u0150 seg\u00edt \u00f6sszef\u00fcgg\u00e9seket tal\u00e1lni.'
-    : 'V\u00e1lassz egy k\u00e9rd\u00e9st a jobb oldali panelb\u0151l, hogy megk\u00e9rdezd a gyan\u00fas\u00edtottakat.';
+    : 'V\u00e1lassz egy k\u00e9rd\u00e9st az elérhető kérdések panelb\u0151l, hogy megk\u00e9rdezd a gyan\u00fas\u00edtottakat.';
   var chatContainer = document.getElementById('chat-messages');
   chatContainer.innerHTML = '<div class="chat-welcome" id="chat-welcome">' + welcomeText + '</div>';
 
@@ -81,12 +210,16 @@ function enterRound() {
 
 
   highlightedPromptId = null;
+  newlyUnlockedPromptIds = new Set();
   document.getElementById('hint-btn').disabled = hintUsed;
 
 
   // Reset UI elements from previous round
   document.getElementById('end-round-wrap').classList.remove('visible');
   document.getElementById('timeup-ribbon').classList.remove('visible');
+  document.getElementById('timeup-modal').classList.remove('visible');
+  var banner = document.getElementById('mobile-end-banner');
+  if (banner) banner.classList.remove('visible');
   document.querySelector('.prompts-panel').classList.remove('disabled');
   document.getElementById('round-timer').classList.remove('warning', 'critical', 'expired');
 
@@ -95,6 +228,7 @@ function enterRound() {
   renderPrompts();
   showScreen('game-screen');
   startTimer(info.timeLimit);
+  saveState();
 }
 
 
@@ -163,6 +297,7 @@ function renderPrompts() {
     var classes = 'prompt-card';
     if (usedPromptIds.has(prompt.id)) classes += ' used';
     if (prompt.id === highlightedPromptId && !usedPromptIds.has(prompt.id)) classes += ' highlighted';
+    if (newlyUnlockedPromptIds.has(prompt.id)) classes += ' newly-unlocked';
     card.className = classes;
 
 
@@ -193,6 +328,7 @@ function useHint() {
   if (hintUsed || timerExpired || questionsRemaining <= 0) return;
   hintUsed = true;
   document.getElementById('hint-btn').disabled = true;
+  saveState();
 
 
   var available = currentPrompts.filter(function(p) {
@@ -284,6 +420,22 @@ function usePrompt(prompt) {
   document.getElementById('q-counter').textContent = questionsRemaining;
 
 
+  // Handle follow-up questions
+  if (prompt.followUps && prompt.followUps.length > 0) {
+    var followUpIndex = 0;
+    prompt.followUps.forEach(function(followUp) {
+      var followUpId = prompt.id + '-fu-' + followUpIndex++;
+      var followUpPrompt = {
+        ...followUp,
+        id: followUpId,
+        isFollowUp: true
+      };
+      currentPrompts.push(followUpPrompt);
+      newlyUnlockedPromptIds.add(followUpId);
+    });
+  }
+
+
   var welcome = document.getElementById('chat-welcome');
   if (welcome) welcome.remove();
 
@@ -293,7 +445,7 @@ function usePrompt(prompt) {
 
   var userMsg = document.createElement('div');
   userMsg.className = 'chat-msg user';
-  userMsg.innerHTML = '<div class="msg-sender">Ti k\u00e9rdesitek</div><div>' + prompt.text + '</div>';
+  userMsg.innerHTML = '<div>' + prompt.text + '</div>';
   chatContainer.appendChild(userMsg);
 
 
@@ -316,9 +468,10 @@ function usePrompt(prompt) {
     renderPrompts();
 
 
+    saveState();
     if (questionsRemaining <= 0) {
       document.querySelector('.prompts-panel').classList.add('disabled');
-      setTimeout(function() { showEndRoundButton(); }, 1000);
+      setTimeout(function() { showEndRoundButton(); saveState(); }, 1000);
     }
   }, delay);
 }
@@ -327,6 +480,8 @@ function usePrompt(prompt) {
 // ─── END ROUND BUTTON ───
 function showEndRoundButton() {
   document.getElementById('end-round-wrap').classList.add('visible');
+  var banner = document.getElementById('mobile-end-banner');
+  if (banner) banner.classList.add('visible');
 }
 
 
@@ -339,6 +494,7 @@ function startTimer(seconds) {
   timerInterval = setInterval(function() {
     timerSeconds--;
     updateTimerDisplay();
+    if (timerSeconds % 15 === 0) saveState();
     if (timerSeconds <= 0) {
       timerExpired = true;
       stopTimer();
@@ -378,12 +534,11 @@ function updateTimerDisplay() {
 function handleTimeUp() {
   // Stop flashing, keep red box
   document.getElementById('round-timer').classList.add('expired');
-  // Show red ribbon
-  document.getElementById('timeup-ribbon').classList.add('visible');
   // Disable all prompts
   document.querySelector('.prompts-panel').classList.add('disabled');
-  // Show end round button in side panel
-  showEndRoundButton();
+  // Show time-up modal
+  document.getElementById('timeup-modal').classList.add('visible');
+  saveState();
 }
 
 
@@ -431,12 +586,14 @@ function showRoundSummary() {
 
 
   showScreen('round-summary');
+  saveState();
 }
 
 
 // ─── PROCEED FROM SUMMARY ───
 function proceedFromSummary() {
   currentRound++;
+  saveState();
   if (currentRound < 3) {
     showRoundTransition();
   } else {
@@ -480,4 +637,5 @@ function lockAccusation() {
   var char = CHARACTERS[selectedSuspect];
   document.getElementById('locked-suspect-name').textContent = char.emoji + ' ' + char.name + ' (' + char.role + ')';
   showScreen('locked-screen');
+  saveState();
 }
