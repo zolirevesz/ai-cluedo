@@ -444,12 +444,6 @@ function collapsePromptsPanel() {
 })();
 
 
-// Wrap usePrompt to auto-collapse on mobile
-var originalUsePrompt = usePrompt;
-usePrompt = function(prompt) {
-  originalUsePrompt(prompt);
-  collapsePromptsPanel();
-};
 </script>
 </body>
 </html>
