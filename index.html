@@ -161,7 +161,7 @@
     .game-body{flex-direction:column}
     .characters-panel{display:none}
     .chat-area{flex:1;min-height:0}
-    .chat-spacer{height:33vh;flex-shrink:0}
+    .chat-spacer{height:33vh;flex-shrink:0;transition:height .3s ease}
     .prompts-panel{width:100%;height:33vh;border-left:none;border-top:1px solid var(--border);position:fixed;bottom:0;left:0;right:0;z-index:50;transition:height .3s ease}
     .prompts-panel.expanded{height:70vh}
     .prompts-panel.collapsed{height:12vh}
@@ -169,10 +169,10 @@
     .prompts-header h3{font-size:.75rem}
     .prompts-list{padding:.5rem}
     .prompt-card{padding:.6rem .8rem;font-size:.8rem}
-    .drag-handle{display:flex;align-items:center;justify-content:center;padding:1rem;cursor:pointer;user-select:none;background:var(--bg-card);border-bottom:1px solid var(--border);z-index:60;position:relative;min-height:30px}
+    .drag-handle{display:flex;align-items:center;justify-content:center;padding:1rem;cursor:pointer;user-select:none;touch-action:none;background:var(--bg-card);border-bottom:1px solid var(--border);z-index:60;position:relative;min-height:30px}
     .drag-handle::after{content:'';width:50px;height:5px;background:var(--text-dim);border-radius:3px}
     .drag-handle:active{background:var(--bg-card-hover)}
-    .chat-messages{padding:1rem}
+    .chat-messages{padding:1rem 1rem 14vh}
     .game-header{padding:.6rem 1rem}
     .game-header h2{font-size:1rem}
     .question-counter{font-size:.8rem}
@@ -184,6 +184,9 @@
     .end-round-wrap{display:none}
     .mobile-end-banner{display:block;max-height:0}
   }
+  /* ── Settings button ── */
+  .settings-btn{background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer;padding:.35rem .5rem;border-radius:6px;transition:color .2s,background .2s;line-height:1;flex-shrink:0}
+  .settings-btn:hover{color:var(--gold);background:rgba(201,168,76,.1)}
 </style>
 </head>
 <body>
@@ -237,6 +240,7 @@
     <div class="round-timer" id="round-timer"><div class="round-badge" id="round-badge">1. kör</div><span class="timer-inner"><span class="timer-icon">⏱️</span> <span class="timer-value" id="timer-value">20:00</span></span></div>
     <div class="round-info">
       <div class="question-counter">Hátralévő kérdések: <span id="q-counter">20</span></div>
+      <button class="settings-btn" onclick="openSettingsModal()" title="Beállítások">⚙️</button>
     </div>
   </div>
   <div class="mobile-end-banner" id="mobile-end-banner">
@@ -317,6 +321,14 @@
     </div>
   </div>
 </div>
+<div id="settings-modal" class="modal-overlay" onclick="handleSettingsOverlayClick(event)">
+  <div class="modal">
+    <h2>⚙️ Beállítások</h2>
+    <div class="modal-buttons" style="margin-top:1.5rem">
+      <button class="btn btn-danger" onclick="confirmResetGame()">↺ Játék újraindítása</button>
+    </div>
+  </div>
+</div>
 <script type="module" src="src/game-data.js"></script>
 <script type="module" src="src/game-explanations.js"></script>
 <script type="module" src="src/game-logic.js"></script>
@@ -326,28 +338,42 @@ function restartGame() {
   location.reload();
 }
 
+function openSettingsModal() {
+  document.getElementById('settings-modal').classList.add('visible');
+}
+
+function closeSettingsModal() {
+  document.getElementById('settings-modal').classList.remove('visible');
+}
+
+function handleSettingsOverlayClick(e) {
+  if (e.target === document.getElementById('settings-modal')) {
+    closeSettingsModal();
+  }
+}
+
+function confirmResetGame() {
+  closeSettingsModal();
+  restartGame();
+}
 
 function closeTimeupModal() {
   document.getElementById('timeup-modal').classList.remove('visible');
   showRoundSummary();
 }
 
-
 function showHintModal() {
   document.getElementById('hint-modal').classList.add('visible');
 }
-
 
 function closeHintModal() {
   document.getElementById('hint-modal').classList.remove('visible');
 }
 
-
 function confirmHint() {
   closeHintModal();
   useHint();
 }
-
 
 function togglePromptsPanel() {
   var panel = document.getElementById('prompts-panel');
@@ -366,7 +392,6 @@ function togglePromptsPanel() {
   }
 }
 
-
 function collapsePromptsPanel() {
   var panel = document.getElementById('prompts-panel');
   var spacer = document.getElementById('chat-spacer');
@@ -377,18 +402,15 @@ function collapsePromptsPanel() {
   if (spacer) spacer.style.height = '12vh';
 }
 
-
 // Drag functionality for mobile
 (function() {
   var panel = document.getElementById('prompts-panel');
   var handle = document.getElementById('drag-handle');
   if (!panel || !handle) return;
 
-
   var startY = 0;
   var startHeight = 0;
   var isDragging = false;
-
 
   handle.addEventListener('touchstart', function(e) {
     if (window.innerWidth > 768) return;
@@ -396,11 +418,13 @@ function collapsePromptsPanel() {
     startY = e.touches[0].clientY;
     startHeight = panel.offsetHeight;
     panel.style.transition = 'none';
+    var spacer = document.getElementById('chat-spacer');
+    if (spacer) spacer.style.transition = 'none';
   }, { passive: true });
-
 
   handle.addEventListener('touchmove', function(e) {
     if (!isDragging) return;
+    e.preventDefault();
     var deltaY = startY - e.touches[0].clientY;
     var newHeight = startHeight + deltaY;
     var vh = (newHeight / window.innerHeight) * 100;
@@ -408,8 +432,7 @@ function collapsePromptsPanel() {
     panel.style.height = vh + 'vh';
     var spacer = document.getElementById('chat-spacer');
     if (spacer) spacer.style.height = vh + 'vh';
-  }, { passive: true });
-
+  }, { passive: false });
 
   handle.addEventListener('touchend', function() {
     if (!isDragging) return;
@@ -432,7 +455,6 @@ function collapsePromptsPanel() {
     }
   });
 
-
   // Also keep click as fallback
   handle.addEventListener('click', function(e) {
     if (isDragging) {
@@ -442,7 +464,6 @@ function collapsePromptsPanel() {
     togglePromptsPanel();
   });
 })();
-
 
 </script>
 </body>
