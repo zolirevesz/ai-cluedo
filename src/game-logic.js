@@ -18,10 +18,8 @@ let hintUsed = false;
 let highlightedPromptId = null;
 let newlyUnlockedPromptIds = new Set();
 
-
 // ─── PERSISTENCE ───
 var SAVE_KEY = 'ai_cluedo_state';
-
 
 function saveState() {
   var activeScreen = document.querySelector('.screen.active');
@@ -48,11 +46,9 @@ function saveState() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch { /* ignore persistence failures */ }
 }
 
-
 function clearState() {
   try { localStorage.removeItem(SAVE_KEY); } catch { /* ignore persistence failures */ }
 }
-
 
 function restoreState() {
   var raw;
@@ -61,7 +57,6 @@ function restoreState() {
   var state;
   try { state = JSON.parse(raw); } catch { return false; }
   if (!state || state.screen === 'welcome-screen') return false;
-
 
   currentRound = state.currentRound || 0;
   questionsRemaining = state.questionsRemaining || 0;
@@ -74,10 +69,8 @@ function restoreState() {
   timerSeconds = state.timerSeconds || 0;
   timerExpired = state.timerExpired || false;
 
-
   var info = ROUND_INFO[currentRound];
   currentPrompts = getPromptsForRound(currentRound);
-
 
   if (info) {
     var roundBadge = document.getElementById('round-badge');
@@ -88,10 +81,15 @@ function restoreState() {
   var hintBtn = document.getElementById('hint-btn');
   if (hintBtn) hintBtn.disabled = hintUsed;
 
-
   var chatContainer = document.getElementById('chat-messages');
   if (chatContainer && state.chatHtml) chatContainer.innerHTML = state.chatHtml;
-
+  // Re-create spacer if missing (innerHTML restore removes it)
+  if (chatContainer && !document.getElementById('chat-spacer')) {
+    var restoredSpacer = document.createElement('div');
+    restoredSpacer.id = 'chat-spacer';
+    restoredSpacer.className = 'chat-spacer';
+    chatContainer.appendChild(restoredSpacer);
+  }
 
   if (state.promptsDisabled) {
     var panel = document.querySelector('.prompts-panel');
@@ -114,21 +112,17 @@ function restoreState() {
     if (timerEl2) state.timerClasses.forEach(function(c) { timerEl2.classList.add(c); });
   }
 
-
   if (state.screen === 'accusation-screen') {
     showAccusation();
     return true;
   }
-
 
   if (state.screen === 'game-screen' || state.screen === 'round-summary') {
     renderFilters();
     renderPrompts();
   }
 
-
   showScreen(state.screen);
-
 
   if (state.screen === 'game-screen' && !timerExpired && timerSeconds > 0) {
     startTimer(timerSeconds);
@@ -136,15 +130,12 @@ function restoreState() {
     updateTimerDisplay();
   }
 
-
   return true;
 }
-
 
 window.addEventListener('DOMContentLoaded', function() {
   restoreState();
 });
-
 
 function shuffleArray(arr) {
   const shuffled = [...arr];
@@ -155,12 +146,10 @@ function shuffleArray(arr) {
   return shuffled;
 }
 
-
 function getPromptsForRound(round) {
   const pools = [ROUND1_PROMPTS, ROUND2_PROMPTS, ROUND3_PROMPTS];
   return shuffleArray(pools[round]).map((p, i) => ({ ...p, id: `r${round}-${i}` }));
 }
-
 
 // ─── SCREEN MANAGEMENT ───
 function showScreen(id) {
@@ -181,7 +170,6 @@ function startGame() {
   showRoundTransition();
 }
 
-
 // ─── ROUND TRANSITION ───
 function showRoundTransition() {
   const info = ROUND_INFO[currentRound];
@@ -192,13 +180,11 @@ function showRoundTransition() {
   showScreen('round-transition');
 }
 
-
 // ─── ENTER ROUND ───
 function enterRound() {
   const info = ROUND_INFO[currentRound];
   questionsRemaining = info.limit;
   usedPromptsThisRound = [];
-
 
   document.getElementById('round-badge').textContent = info.roundLabel;
   document.getElementById('q-counter').textContent = questionsRemaining;
@@ -207,16 +193,17 @@ function enterRound() {
     : 'V\u00e1lassz egy k\u00e9rd\u00e9st az elérhető kérdések panelb\u0151l, hogy megk\u00e9rdezd a gyan\u00fas\u00edtottakat.';
   var chatContainer = document.getElementById('chat-messages');
   chatContainer.innerHTML = '<div class="chat-welcome" id="chat-welcome">' + welcomeText + '</div>';
-
+  var newSpacer = document.createElement('div');
+  newSpacer.id = 'chat-spacer';
+  newSpacer.className = 'chat-spacer';
+  chatContainer.appendChild(newSpacer);
 
   currentPrompts = getPromptsForRound(currentRound);
   usedPromptIds = new Set();
 
-
   highlightedPromptId = null;
   newlyUnlockedPromptIds = new Set();
   document.getElementById('hint-btn').disabled = hintUsed;
-
 
   // Reset UI elements from previous round
   document.getElementById('end-round-wrap').classList.remove('visible');
@@ -227,7 +214,6 @@ function enterRound() {
   document.querySelector('.prompts-panel').classList.remove('disabled');
   document.getElementById('round-timer').classList.remove('warning', 'critical', 'expired');
 
-
   renderFilters();
   renderPrompts();
   showScreen('game-screen');
@@ -235,13 +221,11 @@ function enterRound() {
   saveState();
 }
 
-
 // ─── FILTERS ───
 function renderFilters() {
   var filterContainer = document.getElementById('prompts-filter');
   filterContainer.innerHTML = '';
   currentFilter = 'all';
-
 
   var targets;
   if (currentRound === 2) {
@@ -260,7 +244,6 @@ function renderFilters() {
     ];
   }
 
-
   targets.forEach(function(t) {
     var btn = document.createElement('button');
     btn.className = 'filter-btn' + (t.key === 'all' ? ' active' : '');
@@ -275,54 +258,49 @@ function renderFilters() {
   });
 }
 
-
 // ─── RENDER PROMPTS ───
 function renderPrompts() {
   var list = document.getElementById('prompts-list');
   list.innerHTML = '';
 
-
   var filtered = currentFilter === 'all'
     ? currentPrompts
     : currentPrompts.filter(function(p) { return p.target === currentFilter; });
 
-
-  if (highlightedPromptId && !hintAnimating) {
+  if (!hintAnimating) {
     filtered = filtered.slice().sort(function(a, b) {
-      if (a.id === highlightedPromptId) return -1;
-      if (b.id === highlightedPromptId) return 1;
-      return 0;
+      function priority(p) {
+        if (p.id === highlightedPromptId && !usedPromptIds.has(p.id)) return 0;
+        if (newlyUnlockedPromptIds.has(p.id) && !usedPromptIds.has(p.id)) return 1;
+        return 2;
+      }
+      return priority(a) - priority(b);
     });
   }
 
-
   filtered.forEach(function(prompt) {
     var card = document.createElement('div');
+    var isHighlighted = prompt.id === highlightedPromptId && !usedPromptIds.has(prompt.id);
     var classes = 'prompt-card';
     if (usedPromptIds.has(prompt.id)) classes += ' used';
-    if (prompt.id === highlightedPromptId && !usedPromptIds.has(prompt.id)) classes += ' highlighted';
-    if (newlyUnlockedPromptIds.has(prompt.id)) classes += ' newly-unlocked';
+    if (isHighlighted) classes += ' highlighted';
+    else if (newlyUnlockedPromptIds.has(prompt.id)) classes += ' newly-unlocked';
     card.className = classes;
-
 
     var targetInfo = prompt.target === 'nyomozo'
       ? { name: 'Nyomoz\u00f3', emoji: '\uD83D\uDD0D' }
       : CHARACTERS[prompt.target];
 
-
     card.innerHTML = '<div class="prompt-target">' + targetInfo.emoji + ' ' + targetInfo.name + '</div>'
       + '<div class="prompt-text">' + prompt.text + '</div>';
-
 
     if (!usedPromptIds.has(prompt.id)) {
       card.onclick = function() { usePrompt(prompt); };
     }
 
-
     list.appendChild(card);
   });
 }
-
 
 // ─── HINT ───
 var hintAnimating = false;
@@ -333,16 +311,13 @@ function useHint() {
   document.getElementById('hint-btn').disabled = true;
   saveState();
 
-
   var available = currentPrompts.filter(function(p) {
     return p.quality === 'strong' && !usedPromptIds.has(p.id);
   });
   if (available.length === 0) return;
 
-
   var pick = available[Math.floor(Math.random() * available.length)];
   highlightedPromptId = pick.id;
-
 
   // Reset filter to "all" so card is visible
   currentFilter = 'all';
@@ -350,67 +325,52 @@ function useHint() {
   var allBtn = document.querySelector('.filter-btn');
   if (allBtn) allBtn.classList.add('active');
 
-
   // Render WITHOUT sort so the card stays in its original position
   hintAnimating = true;
   renderPrompts();
-
 
   var list = document.getElementById('prompts-list');
   var targetCard = list.querySelector('.prompt-card.highlighted');
   var firstCard = list.querySelector('.prompt-card');
   if (!targetCard || !firstCard || targetCard === firstCard) {
     hintAnimating = false;
-    if (targetCard) {
-      targetCard.classList.add('hint-settle');
-      targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    renderPrompts();
+    list.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
-
 
   // Start animation after a brief pause
   setTimeout(function() {
     // Record old position
     var oldRect = targetCard.getBoundingClientRect();
 
-
     // Move DOM node to top
     list.insertBefore(targetCard, firstCard);
-
 
     // Record new position
     var newRect = targetCard.getBoundingClientRect();
     var deltaY = oldRect.top - newRect.top;
-
 
     // FLIP: place at old position, then animate to new
     targetCard.style.transform = 'translateY(' + deltaY + 'px)';
     targetCard.style.transition = 'none';
     targetCard.classList.add('hint-animate');
 
-
     // Force reflow
     targetCard.offsetHeight;
-
 
     // Animate to final position
     targetCard.style.transition = 'transform .8s cubic-bezier(.4,0,.2,1)';
     targetCard.style.transform = 'translateY(0)';
 
-
     // Clean up after animation
     setTimeout(function() {
-      targetCard.style.transform = '';
-      targetCard.style.transition = '';
-      targetCard.classList.remove('hint-animate');
-      targetCard.classList.add('hint-settle');
       hintAnimating = false;
+      renderPrompts();
       list.scrollTo({ top: 0, behavior: 'smooth' });
     }, 850);
   }, 400);
 }
-
 
 // ─── USE PROMPT ───
 function usePrompt(prompt) {
@@ -424,7 +384,6 @@ function usePrompt(prompt) {
   usedPromptsThisRound.push(prompt);
   questionsRemaining--;
   document.getElementById('q-counter').textContent = questionsRemaining;
-
 
   // Handle follow-up questions
   if (prompt.followUps && prompt.followUps.length > 0) {
@@ -441,19 +400,15 @@ function usePrompt(prompt) {
     });
   }
 
-
   var welcome = document.getElementById('chat-welcome');
   if (welcome) welcome.remove();
 
-
   var chatContainer = document.getElementById('chat-messages');
-
 
   var userMsg = document.createElement('div');
   userMsg.className = 'chat-msg user';
   userMsg.innerHTML = '<div>' + prompt.text + '</div>';
   chatContainer.appendChild(userMsg);
-
 
   var typingMsg = document.createElement('div');
   typingMsg.className = 'chat-msg ai';
@@ -465,14 +420,12 @@ function usePrompt(prompt) {
   chatContainer.appendChild(typingMsg);
   chatContainer.scrollTop = chatContainer.scrollHeight;
 
-
   var delay = 800 + Math.random() * 1200;
   setTimeout(function() {
     typingMsg.innerHTML = '<div class="msg-sender">' + targetInfo.emoji + ' ' + targetInfo.name + '</div>'
       + '<div>' + prompt.response + '</div>';
     chatContainer.scrollTop = chatContainer.scrollHeight;
     renderPrompts();
-
 
     saveState();
     if (questionsRemaining <= 0) {
@@ -482,14 +435,12 @@ function usePrompt(prompt) {
   }, delay);
 }
 
-
 // ─── END ROUND BUTTON ───
 function showEndRoundButton() {
   document.getElementById('end-round-wrap').classList.add('visible');
   var banner = document.getElementById('mobile-end-banner');
   if (banner) banner.classList.add('visible');
 }
-
 
 // ─── TIMER ───
 function startTimer(seconds) {
@@ -509,14 +460,12 @@ function startTimer(seconds) {
   }, 1000);
 }
 
-
 function stopTimer() {
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
   }
 }
-
 
 function updateTimerDisplay() {
   var mins = Math.floor(timerSeconds / 60);
@@ -536,7 +485,6 @@ function updateTimerDisplay() {
   }
 }
 
-
 function handleTimeUp() {
   // Stop flashing, keep red box
   document.getElementById('round-timer').classList.add('expired');
@@ -547,13 +495,11 @@ function handleTimeUp() {
   saveState();
 }
 
-
 // ─── ROUND SUMMARY ───
 function showRoundSummary() {
   stopTimer();
   var info = ROUND_INFO[currentRound];
   document.getElementById('rs-title').textContent = info.title + ' \u2013 \u00d6sszegz\u00e9s';
-
 
   var strongCount = 0;
   var weakCount = 0;
@@ -562,7 +508,6 @@ function showRoundSummary() {
     else weakCount++;
   });
 
-
   var statsHtml = '<div class="summary-stat stat-strong">'
     + '<div class="stat-num">' + strongCount + '</div>'
     + '<div class="stat-label">Er\u0151s k\u00e9rd\u00e9s</div></div>'
@@ -570,7 +515,6 @@ function showRoundSummary() {
     + '<div class="stat-num">' + weakCount + '</div>'
     + '<div class="stat-label">Gyenge k\u00e9rd\u00e9s</div></div>';
   document.getElementById('summary-stats').innerHTML = statsHtml;
-
 
   var listHtml = '';
   usedPromptsThisRound.forEach(function(p) {
@@ -586,15 +530,12 @@ function showRoundSummary() {
   });
   document.getElementById('summary-list').innerHTML = listHtml;
 
-
   var nextLabel = currentRound < 2 ? 'K\u00f6vetkez\u0151 k\u00f6r' : 'V\u00e1d emel\u00e9se';
   document.getElementById('rs-next-btn').textContent = nextLabel;
-
 
   showScreen('round-summary');
   saveState();
 }
-
 
 // ─── PROCEED FROM SUMMARY ───
 function proceedFromSummary() {
@@ -607,14 +548,12 @@ function proceedFromSummary() {
   }
 }
 
-
 // ─── ACCUSATION ───
 function showAccusation() {
   var grid = document.getElementById('suspect-grid');
   grid.innerHTML = '';
   selectedSuspect = null;
   document.getElementById('accuse-btn').disabled = true;
-
 
   Object.entries(CHARACTERS).forEach(function(entry) {
     var key = entry[0];
@@ -633,10 +572,8 @@ function showAccusation() {
     grid.appendChild(card);
   });
 
-
   showScreen('accusation-screen');
 }
-
 
 function lockAccusation() {
   if (!selectedSuspect) return;
